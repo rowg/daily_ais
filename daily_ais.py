@@ -37,6 +37,8 @@ REVISION HISTORY
 
 2018-10-10, kpb--Refactored. Put calls to plotting routines into generate_plots() function.
 
+2020-10-09, kpb. Added test for corrupt patternHistory shelve file.
+
 '''
 
 class DailyAisError(Exception):
@@ -754,6 +756,15 @@ if __name__ == '__main__':
         shelf['loop2PatternHistory'] = loop2PatternHistory
       except:
         raise DailyAisError("Failed to create patternHistoryFile.")
+      
+    # 2020-10-09, kpb. Workaround for apparent python bug that results in KeyError, even 
+    # when "'loop2PatternHistory' in shelf" returns True. Listing the keys is a fast way
+    # to cause an exception, detecting a corrupted shelve object and bail out gracefully.
+    try:
+       tmp = list(shelf.keys())
+    except:
+       shelf.close()
+       raise DailyAisError("Failed to read keys from shelved patternHistoryFile. File may be corrupt. Delete it and try again. ")
 
     try:
       loop1PatternHistory = shelf['loop1PatternHistory']
